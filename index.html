@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Will you be my girlfriend rory? 💕🫶</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      /* Cherry blossom petal pink background */
+      background: linear-gradient(135deg, #ffb7c5 0%, #ffc8d6 50%, #ff9eb5 100%);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      text-align: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    /* Falling snow / confetti canvas */
+    #effectCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Small floating music pill */
+    #musicBadge {
+      position: fixed;
+      top: 18px;
+      background: rgba(255, 255, 255, 0.28);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      color: #ffffff;
+      padding: 8px 18px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      z-index: 4;
+      text-shadow: 0 1px 4px rgba(180, 40, 90, 0.4);
+      transition: transform 0.2s ease;
+    }
+
+    #musicBadge:hover {
+      transform: scale(1.05);
+    }
+
+    /* Glassmorphism container inspired by guns.lol */
+    .card {
+      background: rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      padding: 45px 32px;
+      border-radius: 24px;
+      box-shadow: 0 15px 35px rgba(214, 51, 108, 0.2);
+      max-width: 460px;
+      width: 100%;
+      position: relative;
+      z-index: 2;
+    }
+
+    .emoji {
+      font-size: 64px;
+      margin-bottom: 18px;
+      display: block;
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.6));
+    }
+
+    /* White glowing question font */
+    h1 {
+      color: #ffffff;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      text-shadow: 
+        0 0 8px rgba(255, 255, 255, 0.85),
+        0 0 18px rgba(255, 105, 180, 0.75);
+    }
+
+    p {
+      color: #ffffff;
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 30px;
+      text-shadow: 0 1px 6px rgba(180, 40, 90, 0.35);
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      min-height: 52px;
+    }
+
+    button {
+      padding: 13px 32px;
+      font-size: 18px;
+      font-weight: bold;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      color: #ffffff;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    /* Green Yes Button */
+    #yesBtn {
+      background-color: #2ecc71;
+      box-shadow: 0 4px 15px rgba(46, 204, 113, 0.55);
+    }
+
+    #yesBtn:hover {
+      transform: scale(1.08);
+      background-color: #27ae60;
+      box-shadow: 0 6px 22px rgba(46, 204, 113, 0.8);
+    }
+
+    /* Red No Button */
+    #noBtn {
+      background-color: #e74c3c;
+      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.5);
+      position: relative;
+      z-index: 3;
+    }
+
+    #noBtn:hover {
+      background-color: #c0392b;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body onclick="startMusic()">
+
+  <!-- Music Indicator Badge -->
+  <div id="musicBadge">🎵 Tap anywhere for Super Shy - NewJeans</div>
+
+  <!-- Hidden YouTube Player for "Super Shy" by NewJeans -->
+  <div id="ytPlayer" style="position: fixed; width: 0; height: 0; opacity: 0; pointer-events: none;"></div>
+
+  <!-- Falling snow / confetti effect -->
+  <canvas id="effectCanvas"></canvas>
+
+  <!-- Main Question Card -->
+  <div class="card" id="questionCard">
+    <span class="emoji">🌸</span>
+    <h1>Will you be my girlfriend rory? 💕🫶</h1>
+    <p>Every moment with you feels special, and I want to make it official.</p>
+    <div class="buttons">
+      <button id="yesBtn" onclick="sayYes()">Yes</button>
+      <button id="noBtn" onmouseover="moveButton()" ontouchstart="moveButton()">No</button>
+    </div>
+  </div>
+
+  <!-- Celebration Screen -->
+  <div class="card hidden" id="celebrationCard">
+    <span class="emoji">💖🌸✨</span>
+    <h1>YAYYY I LOVE U SO MUCHH💕💕🎉🎉</h1>
+  </div>
+
+  <!-- YouTube IFrame API -->
+  <script src="https://youtube.com"></script>
+  <script>
+    let player;
+    let musicStarted = false;
+    let saidYes = false;
+
+    // Load "Super Shy" by NewJeans (Official Audio/MV ID: ArmDp-zijuc)
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('ytPlayer', {
+        height: '0',
+        width: '0',
+        videoId: 'ArmDp-zijuc',
+        playerVars: {
+          autoplay: 0,
+          loop: 1,
+          playlist: 'ArmDp-zijuc'
+        }
+      });
+    }
+
+    // Play song on first click/tap anywhere on screen
+    function startMusic() {
+      if (!musicStarted && !saidYes && player && typeof player.playVideo === 'function') {
+        player.playVideo();
+        musicStarted = true;
+        document.getElementById('musicBadge').innerText = '🎶 Now Playing: Super Shy - NewJeans';
+      }
+    }
+
+    // Canvas Setup for Snow & Confetti
+    const canvas = document.getElementById('effectCanvas');
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = window.innerWidth;
+    let height = canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    // Snowflakes (Before Yes)
+    const snowflakes = Array.from({ length: 90 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      r: Math.random() * 3.5 + 1.5,
+      speedY: Math.random() * 1.4 + 0.6,
+      speedX: (Math.random() - 0.5) * 0.8,
+      opacity: Math.random() * 0.6 + 0.4
+    }));
+
+    // Confetti Pieces (After Yes)
+    const confettiColors = ['#ff4d6d', '#ffbe0b', '#3a86ff', '#2ecc71', '#ffffff', '#ff758f', '#c77dff'];
+    const confettiPieces = Array.from({ length: 160 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height - height,
+      w: Math.random() * 10 + 6,
+      h: Math.random() * 6 + 4,
+      color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+      speedY: Math.random() * 3 + 2,
+      speedX: (Math.random() - 0.5) * 2,
+      angle: Math.random() * 360,
+      spin: (Math.random() - 0.5) * 8
+    }));
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+
+      if (!saidYes) {
+        // Draw Falling Snow
+        for (const flake of snowflakes) {
+          ctx.beginPath();
+          ctx.arc(flake.x, flake.y, flake.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${flake.opacity})`;
+          ctx.shadowBlur = 6;
+          ctx.shadowColor = '#ffffff';
+          ctx.fill();
+
+          flake.y += flake.speedY;
+          flake.x += flake.speedX;
+
+          if (flake.y > height) {
+            flake.y = -5;
+            flake.x = Math.random() * width;
+          }
+          if (flake.x > width) flake.x = 0;
+          if (flake.x < 0) flake.x = width;
+        }
+      } else {
+        // Draw Raining Confetti
+        ctx.shadowBlur = 0;
+        for (const c of confettiPieces) {
+          ctx.save();
+          ctx.translate(c.x, c.y);
+          ctx.rotate((c.angle * Math.PI) / 180);
+          ctx.fillStyle = c.color;
+          ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
+          ctx.restore();
+
+          c.y += c.speedY;
+          c.x += c.speedX;
+          c.angle += c.spin;
+
+          if (c.y > height) {
+            c.y = -10;
+            c.x = Math.random() * width;
+          }
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // Dodging "No" Button
+    function moveButton() {
+      startMusic();
+      const noBtn = document.getElementById('noBtn');
+      noBtn.style.position = 'fixed';
+      const maxX = window.innerWidth - noBtn.offsetWidth - 20;
+      const maxY = window.innerHeight - noBtn.offsetHeight - 20;
+      noBtn.style.left = Math.max(20, Math.random() * maxX) + 'px';
+      noBtn.style.top = Math.max(20, Math.random() * maxY) + 'px';
+    }
+
+    // Show Celebration, Stop Song & Start Confetti on "Yes"
+    function sayYes() {
+      saidYes = true;
+      if (player && typeof player.stopVideo === 'function') {
+        player.stopVideo();
+      }
+      document.getElementById('musicBadge').classList.add('hidden');
+      document.getElementById('questionCard').classList.add('hidden');
+      document.getElementById('noBtn').classList.add('hidden');
+      document.getElementById('celebrationCard').classList.remove('hidden');
+    }
+  </script>
+
+</body>
+  </html>
+  
